@@ -1,0 +1,166 @@
+---
+title: "Parcial 1"
+author: "Velandia Joan"
+date: "24 de agosto de 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Punto 1
+
+## B) 
+
+La suma de los elementos de una matriz $A$ de tamaño $n*n$, tiene una cota ajustada de $\Theta(n^2)$ debido a que se necesita recorrer las n filas n veces y las n columnas $n^2$ veces, debido a que para cada sumatoria en la fila i, se recorre todas las j columnas, obteniendo: $O (n^2)$  y en el caso que $n=1$ un $\Omega (n)$
+
+###Algoritmo
+
+Se utilizaron matrices con valores en el intervalo [-20,20]
+
+####Algoritmo para la creación de la matriz $A_{n*n}$
+
+#####Entradas: 
+
+* Un entero con el tamaño $n$ de la matriz $A$
+
+#####Salidas: 
+
+* Una matriz $A$ de tamaño $n$ con valores en el intervalo [-20,20]
+
+```{r función para crear una matriz}
+
+crearMatrix = function(tamMatriz)
+{
+  n = tamMatriz*tamMatriz
+  
+  datos = sample(-20:20, n, replace = T ) ## Datos de la matrix aleatorios y repetidos
+   
+  A = matrix(datos, nrow = tamMatriz)
+
+  return(A)
+}
+
+```
+
+###Algoritmo para la suma de los elementos de la matriz $A_{n*n}$
+
+#####Entradas: 
+
+* Una matriz $A_{n*n}$, y un entero con su tamaño $n$
+
+#####Salidas: 
+
+* Una colección con la sumatoria resultante de los elementos de la matriz $A$, y la cantidad de iteraciones que tomó.
+
+```{r función sumar los elementos de una matriz}
+
+sumarElementosMatriz = function(A, tamMatriz)
+{
+  sum = 0
+  resultados = c()
+  
+  for (i in 1:tamMatriz) # n recorridos para las filas
+  {
+    for (j in 1:tamMatriz) # n*n recorridos para las columnas
+    {
+      sum = sum + A[i,j]
+    } 
+  }
+  
+  iteraciones = i*j
+  
+  resultados[1] = sum
+  resultados[2] = iteraciones
+  
+  return(resultados)
+}
+
+```
+
+###Creación de las matrices de prueba $A_{{n*n}_i}$
+
+#####Entradas: 
+
+* Un entero con el tamaño $n$ de la matriz prueba $A$
+
+#####Salidas: 
+
+* Una matriz $A$ del tamaño de la prueba necesitada
+
+```{r, creación de las matrices de prueba}
+
+crearPrueba = function(tamPrueba)
+{
+  A = crearMatrix(tamPrueba)
+  
+  return(A)
+  
+}
+
+```
+
+
+###Realizando pruebas
+
+Se realizaron 49 Pruebas con diferentes tamaños $n$ de matrices $A$ diferentes desde $n = 2$ hasta $n = 50$
+
+#####Entradas: 
+
+* Una colección con el tamaño $n$ de la matriz prueba $A_i$
+
+#####Salidas: 
+
+* El resultado de la matriz prueba $A_i$ y la cantidad de iteraciones usadas para encontrar el resultado
+
+```{r Algoritmo para realizar las pruebas}
+
+pruebas = function(tamPruebas)
+{
+  iterActual = c() # Cantidad de iteraciones que se necesitaron para hallar la sumatoria
+  resul = c() # Sumatoria e iteraciones de la matriz A_i
+  
+  for (i in 1:length(tamPruebas))
+  {
+    A = crearPrueba(tamPruebas[i]) # Se crea la prueba de tamaño 2 para la iteración i = 1 
+                                   # hasta el tamaño 50 para i = 49
+    
+    resul = sumarElementosMatriz(A, tamPruebas[i])
+    
+    iterActual[i] = resul[2]
+    
+    if(tamPruebas[i] <= 13 ) # Se muestran las matrices de las primeras 13 pruebas
+    {
+      cat ("\nPara la siguiente matriz A\n")
+      print(A)
+    }
+    else
+    {
+      cat ("\nPara una matriz prueba \"A\" de tamaño, n = ", tamPruebas[i], " \n")
+    }
+    
+    cat("\nLa sumatoria de sus elementos es = ", resul[1], "\n") 
+  }
+  
+  return(iterActual)
+}
+
+```
+
+```{r, echo = FALSE}
+
+misPruebas = c(2:20)
+iteraciones = pruebas(misPruebas)
+
+```
+
+### Convergencia
+
+Siendo $f(n) = n + n^2$, y sabiendo que la para la cota superior asintótica $O(n)$, solo se toma en cuenta los valores del orden mayor, obteniendo $O(n^2)$
+
+```{r, echo=FALSE}
+plot(misPruebas, iteraciones, main = "Cota superior asintótica", xlab = "Tamaño matriz de prueba", ylab = "Iteraciones", type = "o" )
+
+```
+

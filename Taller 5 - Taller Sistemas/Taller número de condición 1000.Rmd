@@ -1,0 +1,203 @@
+---
+title: "Taller número de condición 1000"
+author: "Jimenez Nelson, Velandia Joan"
+date: "18 de agosto de 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pracma)
+library(Matrix)
+```
+
+```{r, echo=FALSE}
+
+crearMatrix = function()
+{
+  datos = sample(1:20,36,replace=T) ## DAtos de la matrix aleatorios
+  
+  A = matrix(datos,nrow = 6,ncol = 6)
+  
+  while(1/rcond(A) < 1000)
+  {
+    datos = sample(1:20,36,replace=T) ## DAtos de la matrix aleatorios
+    A = matrix(datos,nrow = 6,ncol = 6)
+  }
+  
+  return(A)
+}
+
+```
+
+#Punto 1
+
+Dada la siguiente matriz A:
+
+```{r, echo=FALSE}
+A = crearMatrix()
+A
+
+```
+
+y su vector solución b:
+
+```{r, echo=FALSE}
+b = c(1,5,2,3,4,5)
+b
+```
+y un número de condición:
+
+```{r, echo=FALSE}
+print(1/rcond(A))
+```
+
+
+##A) Método de Gauss-Siedel
+
+```{r, echo=FALSE}
+diag1 = function(M) 
+{
+  
+  M[col(M)!=row(M)] <- 0
+  
+  return(M)
+}
+
+L = tril(A,k=-1,diag = FALSE)#triangular inferior
+D = diag1(A)
+U = triu(A,k=1,diag = FALSE)#triangular superior
+I=diag(1,nrow = nrow(A)) 
+
+T3 = -solve(D)
+T4 = T3 %*% U
+T5= solve(D)
+T6 = L %*% T5
+T7 = I + T6
+T8 = solve(T7)
+
+MatTG = T4%*%T8
+normaG = norm(MatTG, type ="I")
+
+```
+
+###Convergencia Gauss-Siedel
+
+```{r, echo=FALSE}
+print(normaG)
+```
+
+###Matriz transición Gauss-Siedel
+
+```{r, echo=FALSE}
+print(MatTG)
+```
+
+
+###Comparación
+
+Se procede a solucionar el sistema con la función $itersolve()$ del lenguaje $R$ con una tolerancia de $e^{-9}$
+
+```{r, echo=FALSE}
+
+X = itersolve(A, b, tol = 1e-9, method = "Gauss-Seidel")
+print(X)
+
+```
+
+##B) Método de Jacobi
+###Convergencia Jacobi
+```{r, echo=FALSE}
+MatTJ = (-solve(D))%*%(L+U)
+normaJ = norm(MatTJ, type = c("I"))
+print(normaJ)
+```
+
+###Matriz transición Jacobi
+
+```{r, echo=FALSE}
+print(MatTJ)
+```
+
+###Comparación
+
+
+Se procede a solucionar el sistema con la función $itersolve()$ del lenguaje $R$
+
+```{r, echo=FALSE}
+X = itersolve(A, b, method = "Jacobi")
+print(X)
+```
+
+##B) Método de SOR
+
+Con un $\omega = 1.9$
+
+###Convergencia SOR 
+
+```{r, echo=FALSE}
+w = 1.9
+Qw <- D/w + L
+IQw <- solve(Qw)
+Transc <- eye(6) - IQw%*%A
+print(norm(Transc,type = c("I")))
+```
+
+###Matriz transición SOR
+
+```{r, echo=FALSE}
+
+print(Transc)
+
+```
+
+Finalmente la solución dada por la función $solve$ del lenguaje $R$ fue
+
+```{r, echo=FALSE}
+solucion<- solve(A,b)
+print(solucion)
+
+```
+
+
+#Punto 2
+
+Dada la siguiente matriz:
+
+```{r, echo=FALSE}
+A = matrix(c(8, 9, 2,
+             2, 7, 2,
+             2, 8, 6), nrow=3, byrow=TRUE)
+A
+
+```
+
+Y su vector solución:
+
+```{r, echo=FALSE}
+b = c(69,47,68)
+b
+```
+
+Se soluciona por el método de Jacobi.
+
+Su convergencia es:
+
+```{r, echo=FALSE}
+
+D = diag1(A)
+L = tril(A,k=-1,diag = FALSE)#triangular inferior
+U = triu(A,k=1,diag = FALSE)#triangular superior
+
+T = (-solve(D))%*%(L+U)
+
+print(norm(T,type = c("I")))
+```
+
+Y su matriz de transición es:
+
+```{r, echo=FALSE}
+T
+```
+

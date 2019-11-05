@@ -1,0 +1,897 @@
+---
+title: "Taller 2"
+author: "Jimenez Nelson, Velandia Joan"
+date: "4 de agosto de 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Método de bisección
+
+Una funcion $f$ continua en un intervalo $[a,b]$ y $f(a)$ tiene signo contrario a $f(b)$, entonces existe por lo menos un punto $r$ en $[a,b]$tal que $f(r) = 0$.
+
+Para la función $f(x) = e^x - pi*x$
+
+```{r , echo=FALSE}
+biseccion = function(f, xa, xb, tol, graf)
+{
+  if ( sign( f(xa)  ) == sign ( f(xb) ) ) 
+  {
+    stop ( "MISMO SIGGNO F(limInf) F(LimSup)" )
+  }  
+  
+  errores = c()
+  eje_x = c()
+  eje_y = c()
+  
+  a = xa 
+  b = xb
+  k = 0
+  
+  cat( formatC ( c("  Iteracion  ", "  a     "," b     ", "  Raiz  ", "Error"), width = 2, format = "s", flag = " "  ), "\n")
+  
+  cont = 0
+  repeat 
+  {
+    cont = cont + 1
+    
+    m = a + 0.5 * (b-a)
+    
+    if( f( m ) == 0)
+    {
+      cat("Cero de f en el intervalo [" ,xa, "," ,xb, "] es ", m)
+    }
+    if( sign ( f(a) ) != sign ( f(m) ))
+    {
+      b = m
+      
+    }
+    else
+    {
+      a  = m
+    }
+    
+    dx = (b-a)/2
+    errores[cont] = dx
+    
+    #imprimir estado
+    
+    cat( formatC( c(cont, a,b,m,dx ), digits = 7, width = -14, format = "f", flag = " "  ), "\n" )
+    k = k + 1
+    #until
+    if( dx < tol )
+    {
+      cat ("Cero de", deparse(f) ,"en el intervalo [" ,xa, "," ,xb, "] \n es aprox.", m, "con error <=", dx )
+      
+      iter = c(1:cont)
+      cont_n = 0;
+      cont_e = 0;
+      
+      repeat
+      {
+        eje_x[cont_n] = errores[cont_e]
+        eje_y[cont_n] = errores[cont_e+1]
+        cont_n = cont_n + 1
+        cont_e = cont_e + 1;
+        
+        if (cont_n == cont)
+        {
+          break;
+        }
+      }
+      
+    
+      
+      if(graf)
+      {
+          plot(iter, errores, main = "Medicion del error Biseccion", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+        
+        plot(eje_x, eje_y, main = "Convergencia Biseccion", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+      }
+        
+      break;
+    }
+  }
+}
+```
+
+Se muestra la gráfica a continuación;
+
+```{r , echo=FALSE}
+limSup = 1
+limInf = 0
+tole = 1e-8
+
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x 
+
+curve(f, -2, 2, main = "e^x-3.14x"); abline( h = 0, v = 0)
+
+```
+
+Se muestra la gráfica en el intervalo $1$ donde se encontro una raiz:
+
+```{r , echo=FALSE }
+curve(f, -2, 2, main = "Funcion en el intervalo", xlim = c(limInf,limSup)); abline( h = 0, v = 0)
+
+```
+
+
+Se muestra la tabla de iteraciones, resultado y errores,  para la primera raiz encontrada
+
+```{r, echo=FALSE}
+biseccion(f, limInf, limSup, tole, FALSE)
+```
+
+
+Se muestra la gráfica en el intervalo $2$ donde se encontro otra raiz:
+
+```{r , echo=FALSE }
+
+limSup = 2
+limInf = 1
+tole = 1e-8
+
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x 
+
+
+curve(f, -2, 2, main = "Funcion en el intervalo", xlim = c(limInf,limSup)); abline( h = 0, v = 0)
+
+
+```
+
+
+Se muestra la tabla de iteraciones, resultado y errores, y convergencia para la primera raiz
+
+```{r, echo=FALSE}
+biseccion(f, limInf, limSup, tole, TRUE)
+```
+
+**NOTA:** La grafica de convergencia y propagacion de error en los metodos de este taller son similares en el sentido de su curvatura(orden), por ello solo se mostrara una vez al hallar la segunda raíz.
+
+# Método de punto fijo
+
+Consiste ene re-escribir la ecuación $f(x) = 0$ en la forma $g(x)=x$. Esta ecuacion satisface la misma raiz, un punto fijo de la $r$ de la ecuación $g(x)=x$ es equivalente a una raiz real de la ecuación $f(x) = 0$:  $r =g(r) \leftrightarrow f(r) = 0$
+
+Vamos a usar la misma funcion $f$ del método anterior
+
+```{r, echo=FALSE}
+
+puntofijo = function(g, x0, tol, maxIteraciones, graf)
+{
+  valIni = x0
+  eje_x = c()
+  eje_y = c()
+  k = 1 
+  cont = 0
+  errores = c()
+  #iteración hasta que abs(x1 - x0) <= tol o se alcance maxIteraciones
+  
+  cat( "\n", formatC ( c( "Iteracion    ", "  Resultado  ", "  Error  "), width = 2, format = "s", flag = " "  ), "\n")
+  
+  repeat
+  {
+    
+    cont = cont + 1
+    x1 = g(x0)
+    dx = abs(x1 - x0) 
+    errores[cont] = dx/x1
+    x0 = x1 
+    #Imprimir estado
+    
+    
+    cat( formatC( c( k, x1, dx/x1 ), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    
+    k = k+1 
+    #until 
+    if((dx < tol) || (k > maxIteraciones)) break;
+  }
+  
+  # Mensaje de salida 
+  if( dx > tol )
+  { 
+    cat("No hubo convergencia ") 
+    
+    #return(NULL)
+  } 
+  else
+  { 
+    cat("Cero de ", deparse(g), "es aproximadamente ", x1,"con valor incicial x_0 = ", valIni, "\ny con error menor que ", tol)
+    iter = c(1:cont)
+    cont_n = 0;
+    cont_e = 0;
+    
+    repeat
+    {
+      eje_x[cont_n] = errores[cont_e]
+      eje_y[cont_n] = errores[cont_e+1]
+      cont_n = cont_n + 1
+      cont_e = cont_e + 1;
+      
+      if (cont_n == cont)
+      {
+        break;
+      }
+    }
+    if(graf)
+    {
+      plot(eje_x, eje_y, main = "Convergencia punto fijo", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+    plot(iter, errores, main = "Medicion del error punto fijo", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+    }
+    
+  }
+}
+
+```
+
+Hallando la primera raiz  con la función $g$ como $e^x/ \pi x$ y tomando como valor incial a 0 obtenemos:
+
+```{r, echo=FALSE}
+valInicial = 0
+tolerancia = 1e-8
+maxIter = 100
+
+g = function(x)  2.7182^x / 3.1415
+curve(g, -6, 6, main = deparse(g)); abline( h = 0, v = 0)
+puntofijo(g,  valInicial,  tolerancia, maxIter, FALSE)
+```
+
+
+Hallando la segunda raiz con función $g$ como $ln(\pi x)$ y tomando como valor incial a 2 obtenemos:
+
+```{r, echo=FALSE, warning=FALSE}
+valInicial = 2
+tolerancia = 1e-8
+maxIter = 100
+
+m = function(x) log(3.1415*x)
+curve(m, -6, 6, main = deparse(m)); abline( h = 0, v = 0)
+puntofijo(m,  valInicial,  tolerancia, maxIter, TRUE)
+```
+
+# Método de Newton
+Es una formula eficiente para encontrar $r$. Es un caso especial del metodo deñ punto fijo eligiendo la función $g$ de tal manera que la convergencia sea de segundo orden
+
+```{r, echo=FALSE}
+
+newtonraphson = function(fun, x0, tol, maxiteraciones, graf)
+{ 
+  valIni = x0
+  eje_x = c()
+  eje_y = c()
+  errores = c()
+  cont = 0
+  # f = string
+  numiter = 0 
+  g = parse(text = fun) # parse devuelve tipo "expression"
+  g. = D(g,"x") 
+  fx = function(x){eval(g)} # convertir f a función
+  fp = function(x){eval(g.)} # convertir f' a función
+  
+  correccion = -fx(x0)/fp(x0) 
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", " f(cero)     ", "  Error  "), width = 2, format = "d", flag = " "  ), "\n")
+  
+  while (abs(correccion) >= tol && numiter <= maxiteraciones)
+  {
+    cont = cont + 1
+    numiter = numiter + 1 
+    
+    if (fp(x0) == 0) stop("División por cero")
+    
+    x1 = x0 + correccion 
+    errores[cont] = abs((x1-x0))/x1
+    correccion = -fx(x1)/fp(x1)
+    cat( formatC( c(numiter, x0, fx(x0), errores[cont] ), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    x0 = x1 
+  }
+  
+  if (numiter > maxiteraciones)
+  {
+    warning("Se alcanzó el máximo número de iteraciones.")
+    cat("Estado:\n")
+    cat("k = ", k, "x = ", x1, " f(x) = ", f(x1), "Error estimado <= ", correccion)
+  }
+  else 
+  {
+    iter = c(1:cont)
+    cont_n = 0;
+    cont_e = 0;
+    
+    repeat
+    {
+      eje_x[cont_n] = errores[cont_e]
+      eje_y[cont_n] = errores[cont_e+1]
+      cont_n = cont_n + 1
+      cont_e = cont_e + 1;
+      
+      if (cont_n == cont)
+      {
+        break;
+      }
+    }
+    
+    if (graf)
+    {
+      plot(eje_x, eje_y, main = "Convergencia Newton", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+      plot(iter, errores, main = "Medicion del error Newton", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+    }
+    
+    
+    cat("Raiz de ", fun, "es aproximadamente ", x0,"con valor incicial x_0 = ", valIni, "\ny con error menor que ", correccion)
+    #return(list(cero = x0, f.cero = fx(x0), numeroiter = numiter, error.est = correccion) ) 
+    
+  }
+}
+```
+
+Hallamos la primera raiz con un valor incial de 0
+
+```{r, echo=FALSE}
+
+valInicial = 0
+tolerancia = 1e-8
+maximaIter = 100
+
+f = function(x) 2.7182^x-3.1415*x
+
+newtonraphson("2.7182^x-3.1415*x", valInicial, tolerancia, maximaIter, FALSE)
+
+```
+
+Hallamos la segunda raiz con un valor incial de 2
+
+```{r, echo=FALSE}
+
+valInicial = 2
+tolerancia = 1e-8
+maximaIter = 100
+
+f = function(x) 2.7182^x-3.1415*x
+
+newtonraphson("2.7182^x-3.1415*x", valInicial, tolerancia, maximaIter, TRUE)
+
+```
+
+# Método de la secante
+
+Es una derivacion de Newton donde se cambia la derivada $f'(x_k)$ por una aproximacion.
+
+```{r, echo=FALSE}
+secante = function (f, x1, x2, num = 1000, eps = 1e-08, eps1 = 1e-08, graf = FALSE)
+{
+  i = 0
+  intIni = x1
+  intFin = x2
+  errores = c()
+  eje_x  =  c()
+  eje_y  =  c()
+  
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", " f(cero)     ", "  Error  "), width = 2, format = "d", flag = " "  ), "\n")
+  
+  while ((abs(x1 - x2) > eps) & (i < num)) {
+    c = x2 - f(x2) * (x2 - x1)/(f(x2) - f(x1))
+    x1 = x2
+    x2 = c
+    i = i + 1
+    errores[i] = abs(x2-x1)/x2
+    cat( formatC( c(i, x1, x2, abs(x2-x1)/x1 ), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+  }
+  
+   cat("Raiz de ", deparse(f), "es aproximadamente ", x2,"\nen el intervalo [", intIni,  ",", intFin, "] y con error menor que ", abs(x2-x1)/x1)
+  
+  if (abs(f(x2)) < eps1) {
+    iter = c(1:i)
+    cont_n = 0;
+    cont_e = 0;
+    
+    repeat
+    {
+      eje_x[cont_n] = errores[cont_e]
+      eje_y[cont_n] = errores[cont_e+1]
+      cont_n = cont_n + 1
+      cont_e = cont_e + 1;
+      
+      if (cont_n == i)
+      {
+        break;
+      }
+    }
+    if (graf)
+    {
+      plot(eje_x, eje_y, main = "Convergencia Secante", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+      plot(iter, errores, main = "Medicion del error Secante", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+    }
+    
+  }
+  else print("No se pudo encontrar la raiz")
+}
+```
+
+Usamos el intervalo $[0,1]$ para hallar la primera raiz.
+
+```{r, echo=FALSE}
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x
+par(mar = rep(2, 4))
+secante(f, 0, 1)
+```
+
+Usamos el intervalo $[1,2]$ para hallar la primera raiz.
+
+```{r, echo=FALSE}
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x
+par(mar = rep(2, 4))
+secante(f, 1, 2, graf = TRUE)
+```
+
+
+# Método de posición Falsa
+
+Calcula la recta secante que une los puntos extremos $(a_1,f(a_1))$ y $(b_1, f(b_1))$. Luego se determina el punto $m$ en que esta recta corta el eje $x$ y ester valor entra a jugar el papel que el método de bisección jugaba el punto medio.
+
+```{r, echo=FALSE}
+# Remueve todos los objetos creados
+rm(list=ls())
+Fx <- function(x) ((exp(1)^x) - (pi*x))
+F1x <- function(x) ((exp(1)^x)-pi)
+
+# Halla la raiz de Fx
+
+regula <- function(a, b, tol, graf) 
+{
+  intIni = a
+  intFin = b
+  
+  x<-seq(a,b,0.1)
+  
+  #plot(x,Fx(x),type="l", col="blue", main = deparse(Fx))
+  #abline(h=0,col="blue")
+  
+  #x<-b
+  #d<-(Fx(b)*a-Fx(a)*b)/(Fx(b)-Fx(a))
+  error <- 1
+  
+  cont = 0
+  errores = c()
+  eje_x  =  c()
+  eje_y  =  c()
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", "  Error     "), width = 2, format = "d", flag = " "  ), "\n")
+  while (error > tol) 
+  {
+    cont = cont + 1
+    x<-(Fx(b)*a-Fx(a)*b)/(Fx(b)-Fx(a))
+    
+    if (Fx(x) == 0) break
+    if (Fx(x)*Fx(a) < 0) 
+    {
+      b <- x
+    }
+    else 
+    {
+      a <- x
+    }
+    
+    error<-abs(Fx(x)/F1x(x))
+    errores[cont] = error
+    #points(rbind(c(x,0)),pch=19,cex=0.7,col="red")
+    
+    cat( formatC( c(cont, x, error), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    
+    
+  }
+  
+  
+  
+  iter = c(1:cont)
+  cont_n = 0;
+  cont_e = 0;
+  
+  repeat
+  {
+    eje_x[cont_n] = errores[cont_e]
+    eje_y[cont_n] = errores[cont_e+1]
+    cont_n = cont_n + 1
+    cont_e = cont_e + 1;
+    
+    if (cont_n == cont)
+    {
+      break;
+    }
+  }
+  
+  
+  cat("\nRaiz de ", deparse(Fx), "es aproximadamente ", x,"\nen el intervalo [", intIni,  ",", intFin, "] y con error menor que ", formatC(error, digits = 7,  width = -15, format = "f", flag = "  "))
+  if(graf)
+  {
+    plot(eje_x, eje_y, main = "Convergencia Posicion Falsa", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+    plot(iter, errores, main = "Medicion del error Posicon Falsa", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+  }
+  
+}
+```
+
+Usaremos el intervalo $[0,1]$ para hallar la primera raiz
+
+```{r, echo=FALSE}
+limInf = 0
+limSup = 2
+limMitad = 1
+tolerancia = 1e-8
+
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x
+par(mar = rep(2, 4))
+
+
+regula(limInf, limMitad, tolerancia, FALSE)
+
+```
+
+
+Usaremos el intervalo $[1,2]$ para hallar la primera raiz
+
+```{r, echo=FALSE}
+limInf = 0
+limSup = 2
+limMitad = 1
+tolerancia = 1e-8
+
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x
+par(mar = rep(2, 4))
+
+
+regula(limMitad,limSup, tolerancia, TRUE)
+
+```
+
+# Método de Aitken
+
+Es un método de aceleracion de la convergencia de una sucesión que converge linealmente.
+Dada una suscesión $x = (x_n) n \in \mathbb{N}$, se calcila la nueva sucesión $\hat{x} = (\hat{x}_n) n \in \mathbb{N}$ definida como
+
+$\hat{x}_{n+2} = x_{n+2} -(x_{n+2}-x_{n+1})^2/x_{n+2}-2x_{n+1}+x_n$
+
+que se puede escribir como:
+
+$\hat{x}_{n+2} = x_{n+2} - (\Delta x_{n+1} )^2/  \Delta^2 x_n$
+
+```{r, echo=FALSE}
+aitken = function(f, m, x0, tol,graf)
+{
+  
+  intIni = x0
+
+  
+  eje_x = c()
+  eje_y = c()
+  errores = c()
+  k =0
+  g<-parse(text=f)
+  fx = function(x){eval(g[[1]])}
+  d.<-D(parse(text=f ), "x")
+  df<-function(x) eval(d.)
+  
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", "  Error     "), width = 2, format = "d", flag = " "  ), "\n")
+  
+  repeat
+  {
+    k = k + 1
+    x1 = x0 - m*(fx(x0)/df(x0))
+    dx = abs(x1-x0)
+    error = dx/x1
+    errores[k] = error
+    
+    cat( formatC( c(k, x1, dx), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    
+    if (dx < tol)
+    {
+      iter = c(1:k)
+      cont_n = 0;
+      cont_e = 0;
+      repeat
+      {
+        eje_x[cont_n] = errores[cont_e]
+        eje_y[cont_n] = errores[cont_e+1]
+        cont_n = cont_n + 1
+        cont_e = cont_e + 1;
+        
+        if (cont_n == k)
+        {
+          break;
+        }
+      }
+      
+      if (graf)
+      {
+        
+        plot(eje_x, eje_y, main = "Convergencia Aitken", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+        plot(iter, errores, main = "Medicion del error Aitken", xlab= "Iteraciones", ylab = "Errores", type = 'o' ) 
+      }
+      
+      cat("\nRaiz de ", f, "es aproximadamente ", x1," con un valor inicial", intIni,",\ny una multiplicidad,", m ,"con error menor que ",formatC(dx, digits = 7,  width = -15, format = "f", flag = "  "))
+      
+      
+      break;
+    }
+    x0 = x1
+    
+  }
+}
+```
+
+Hallaremos la primera raiz con una **multiplicidad** de 1 y un valor incial de 0
+
+```{r, echo=FALSE}
+
+limInf = 0
+limSup = 2
+limMitad = 1
+tolerancia = 1e-8
+f = function(x) ((exp(1)^x) - (pi*x))
+
+aitken("2.7182^x-3.1415*x", 1, 0, tolerancia, FALSE)
+```
+
+Hallaremos la primera raiz con una **multiplicidad** de 1 y un valor incial de 0
+
+```{r, echo=FALSE}
+limInf = 0
+limSup = 2
+limMitad = 1
+tolerancia = 1e-8
+f = function(x) ((exp(1)^x) - (pi*x))
+
+aitken("2.7182^x-3.1415*x", 1, 2, tolerancia, TRUE)
+```
+
+# Metodo de Steffensen
+
+El método de Steffensen tiene en cuenta la observación anterior y se construye combinando el método iterativo del punto fijo y el método de Aitken, de manera que solamente se considera una sucesión de la siguiente forma:
+
+$x_0, x_1, \hat{x}_2 x_3 x_4 \hat{x}_5 x_6 x_7 \hat{x}_8$
+
+o sea, cada dos iteraciones del punto fijo normal obtiene otro punto a partir de la fórmula:
+
+$\hat{x}_n = x_n + \Delta x_n / 1-\gamma_n$
+
+Llegando a obtener una convergencia cuasicuadratica.
+
+
+```{r, echo=FALSE}
+steffensen = function(f, x0, tol, nmax, graf)
+{
+  valInicial = x0
+
+  i = 0
+  errores = c()
+  eje_x  =  c()
+  eje_y  =  c()
+  
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", "  Error     "), width = 2, format = "d", flag = " "  ), "\n")
+  
+  repeat
+  {
+    i = i + 1
+    a = f(x0)*f(x0)
+    b = f(x0+f(x0))-f(x0)
+    x1 = x0 - (a/b)
+    error = (abs(x1-x0))/x1
+    errores[i] = error
+    temp = f(x0)
+    x0 = x1
+    
+    cat( formatC( c(i, x0, error), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    
+    
+    if(abs(temp) <= tol)
+    {
+      iter = c(1:i)
+      cont_n = 0;
+      cont_e = 0;
+      
+      repeat
+      {
+        eje_x[cont_n] = errores[cont_e]
+        eje_y[cont_n] = errores[cont_e+1]
+        cont_n = cont_n + 1
+        cont_e = cont_e + 1;
+        
+        if (cont_n == i)
+        {
+          break;
+        }
+      }
+      
+      cat("\nRaiz de ", deparse(f), "es aproximadamente ", x0,"\ncon un valor inicial", valInicial," y con error menor que ",formatC(error, digits = 7,  width = -15, format = "f", flag = "  "))
+      
+      if(graf)
+      {
+        plot(eje_x, eje_y, main = "Convergencia steffensen", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+        plot(iter, errores, main = "Medicion del error steffensen", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+      }
+      
+      break;   
+    }
+  }
+}
+
+
+```
+
+Se calcula la primer raíz con un valor inical de 0
+
+```{r, echo=FALSE}
+
+valIni = 0
+tolerancia = 1e-8
+maxIter = 100
+
+f = function(x) signif(exp(1),8)^x-signif(pi, 8)*x
+par(mar = rep(2, 4))
+
+steffensen(f, valIni, tolerancia, maxIter, FALSE)
+
+```
+
+Se calcula la primer raíz con un valor inical de 1.5
+
+```{r, echo=FALSE}
+
+valIni = 1.5
+tolerancia = 1e-8
+maxIter = 100
+
+valIni = 1.5
+steffensen(f, valIni, tolerancia, maxIter, TRUE)
+```
+
+
+# Método de Taylor
+
+se aproximo $e^x - \pi x$ con un valor inicial de $x_0$ = 0 y el valor cercano = 0.1 con un grado 10 del polinomio de taylor. El resultado es:
+
+```{r, echo=FALSE}
+DD <- function(expr, name, order = 1) {
+  
+  if(order < 1) stop("La multiplicidad debe ser >= 1")
+  if(order == 1) D(expr, name)
+  
+  else DD(D(expr, name), name, order - 1)
+}
+
+taylorT = function(f, x0, a, n)
+{ # f es tira
+  # parse devuelve una expresión
+  g = parse(text=f)
+  # convertir en función
+  fx = function(x){eval(g[[1]])}
+  # almacenar los sumandos
+  smds = rep(NA, length=n+1)
+  for(k in 1:n)
+  {
+    g. = DD(g,"x", k)
+    fp = function(x) eval(g.)
+    smds[k]=1/factorial(k)*(x0-a)^k *fp(a)
+  }
+  
+  smds[n+1] = fx(a)
+  sum(smds)
+}
+
+f = function(x) ((exp(1)^x) - (pi*x))
+resul = taylorT("2.7182^x-3.1415*x", 0, 0.1, 10)
+cat("Resultado = ", resul , "con un error relativo de", abs((f(0) - resul))/f(0) * 100, "%"  )
+cat("\nComprobación f(0) = ", f(0))
+
+```
+
+# Método de investigación libre - Newton-downhill
+
+Esta basado en el metodo de down hill, una solución lineal aproximada es usada para un valor inical iterativo, con el fin de mejorar el metodo de Newton, la eficacia es comparada con metodos de flujo de energía $(powerflow methods)$
+
+```{r, echo=FALSE}
+##---- Should be DIRECTLY executable !! ----
+##-- ==> Define data, use random,
+##--or do help(data=index) for the standard data sets.
+## The function is currently defined as
+libre = function (f, f1, x0 = 0, num = 1000, eps = 1e-08, eps1 = 1e-08, graf = FALSE)
+{
+  valInicial = x0
+  
+  a = x0
+  b = a - f(a)/f1(a)
+  i = 0
+  
+  errores = c()
+  eje_x  =  c()
+  eje_y  =  c()
+  cat( "\n", formatC ( c( "Iteracion     ", "Cero      ", "  Error     "), width = 2, format = "d", flag = " "  ), "\n")
+  
+  while ((abs(b - a) > eps)) {
+    c = 1
+    j = 0
+    while (abs(f(b)) >= abs(f(a))) {
+      b = a - c * f(a)/f1(a)
+      j = j + 1
+      c = 1/(2^j)
+    }
+    a = b
+    b = a - f(a)/f1(a)
+    c = 1
+    j = 0
+    while (abs(f(b)) >= abs(f(a))) {
+      b = a - c * f(a)/f1(a)
+      j = j + 1
+      c = 1/(2^j)
+    }
+    
+    i = i + 1
+    cat( formatC( c(i, b, abs(b-a)/b), digits = 7, width = -15, format = "f", flag = "  "  ), "\n" )
+    
+    errores[i] = abs(b-a)/b
+  }
+  iter = c(1:i)
+  cont_n = 0;
+  cont_e = 0;
+  
+  repeat
+  {
+    eje_x[cont_n] = errores[cont_e]
+    eje_y[cont_n] = errores[cont_e+1]
+    cont_n = cont_n + 1
+    cont_e = cont_e + 1;
+    
+    if (cont_n == i)
+    {
+      break;
+    }
+  }
+      
+      if(graf)
+      {
+        plot(eje_x, eje_y, main = "Convergencia Newton DownHill", xlab= "Error Iteracion Actual", ylab = "Error Iteracion + 1", type = 'o' )
+        plot(iter, errores, main = "Medicion del error Newton DownHill", xlab= "Iteraciones", ylab = "Errores", type = 'o' )
+      }
+  
+  if (abs(f(b)) < eps1) {
+      cat("\nRaiz de ", deparse(f), "es aproximadamente ", b,"\ncon un valor inicial", valInicial," y con error menor que ",formatC(abs(b-a)/b, digits = 7,  width = -15, format = "f", flag = "  "))
+    
+    
+  }
+  else print("No hubo convergencia")
+}
+
+```
+
+Hallando la primera raiz
+
+```{r, echo=FALSE}
+
+f<-function(x){((exp(1)^x) - (pi*x))}; f1<-function(x){((exp(1)^x) - (pi))};
+libre(f, f1, 1)
+
+```
+
+Hallando la segunda raiz
+
+```{r, echo=FALSE}
+f<-function(x){((exp(1)^x) - (pi*x))}; f1<-function(x){((exp(1)^x) - (pi))};
+libre(f, f1, 2, graf = TRUE)
+```
+
+
+# Mejora de la formula cuadratica
+
+Se cambia la formula cuadratica mediante la racionalización de su numerador. Así:
+
+$x_1 = \dfrac{ (-b  + \sqrt{b^2-4ac}  ) }{2a} * (\dfrac{ -b - \sqrt{b^2-4ac} }  {-b - \sqrt{b^2-4ac} }) = \dfrac{b^2 - (b^2-4ac)}{2a(-b- \sqrt{b^2-4ac})}$
+
+Simplificando:
+
+$x_1 = \dfrac{-2c}{b+\sqrt{b^2-4ac}}$
+
+$x_2 = \dfrac{-2c}{b-\sqrt{b^2-4ac}}$
+
+# Conclusión
+
+Se concluye que mientras el valor inicial $x_0$ este cerca de la raíz, los métodos convergen a la solución, teniendo en cuenta esto el método más eficiente con la función $e^x-\pi x$ es el de Newton. La razón de su eficicencia es debido a su convergencia cuadratica, realizando el calculo con menos iteraciones que los demás metodos, sin embargo, el método de Newton no  converge en algunas funciones con multiplicidad impar, donde se deberá usar otro método como bisección.

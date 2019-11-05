@@ -1,0 +1,308 @@
+---
+title: "Taller Ecuaciones Lineales"
+author: "Jiménez Nelson, Velandia Joan"
+date: "16 de agosto de 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pracma)
+library(Matrix)
+```
+
+#Análisis de la sensibilidad
+
+El objetivo es identificar el impacto que resulta en los resultados del problema original luego de determinadas variaciones en los parámetros, variables o restricciones del modelo, sin que esto pase por resolver el problema nuevamente, para ello se utiliza el inverso del número de condición.
+
+Para la solución se uso la siguiente matriz:
+
+```{r, echo=FALSE}
+A = matrix(c(3.5,4.2, 1/2,1/3), nrow=2, byrow=TRUE) 
+b = c(1.3, 7/4) 
+
+print(A)
+print(b)
+
+```
+
+Se realizó un cambio a la variable $x_{1,1}$
+
+```{r, echo=FALSE}
+
+B = matrix(c(3.8,4.5, 1/2,1/3), nrow=2, byrow=TRUE) 
+cond = 1/rcond(B)
+e = cond*((det(A)-det(B))/det(A))
+
+```
+
+el resultado del nuevo número de condición de la matriz:
+
+```{r, echo=FALSE}
+print(B)
+```
+
+fue:
+
+```{r, echo=FALSE}
+print(cond)
+```
+
+Con un error de: 
+
+```{r, echo=FALSE}
+print(abs(e))
+```
+
+Al ser el número condicional mayor a 1, se dice que la matriz está mal condicionada.
+
+
+#Gauss-Jordan en matrices ralas
+
+El método de Gauss-Jordan es un método directo, afectado por errores de redondeo, además, es un proceso muy lento debido al manejo que hace a la memoria RAM al almacenar y operar la matriz.
+Se hicieron tres pruebas al algoritmo de Gauss-jordan con matrices ralas de tamaño $100*100$, $500*500$, y $1000*1000$ empezando a tomar bastante tiempo a partir de está última prueba.
+
+
+
+
+
+
+#Descomposición LU
+
+La descomposición por el método de LU permite resolver diferentes matrices de la forma $A \textbf{X} = b$ con distintos vectores $b$, sin necesidad de eliminación gaussiana.
+Se requiere una matriz $L$ con la parte triangular superior y su diagonal en valores $1$, y su contrario $U$ con la parte triangular inferior, de tal manera que en nuestro ejemplo sucedería así:
+
+\[ L =
+\left( \begin{array}{cccc}
+ 1 & 0 & \\ 
+ 0.5 & 1 &  \\
+\end{array} \right) \]
+
+\[ U =
+\left( \begin{array}{cccc}
+ 3.5 & 4.2 & \\ 
+ 0.0 & 1/3 &  \\
+\end{array} \right) \]
+
+resolvemos:
+
+```{r, echo=FALSE}
+luA = function(A){ 
+  n = nrow(A) 
+  LU = A 
+  for(j in 1:(n-1)){
+    # columna j 
+    for(i in (j+1): n){ # filas i > j
+      LU[i,j]=LU[i,j]/LU[j,j] # Construye de L 
+      for(k in (j+1):n){ # Eliminación filas i >j. Pivote LU[j,j] 
+        LU[i,k] = LU[i,k] - LU[i,j]*LU[j,k] # Construye U 
+      } 
+    } 
+  } 
+  return(LU) 
+} 
+
+solvelu = function(LU, b)
+{
+  n = nrow(LU)
+  sol = rep(NA, times = n)
+  sol[1] = b[1] 
+  
+  for (i in 2:n)
+  {
+    s = 0
+    
+    for (j in 1:(i-1))
+    {
+      s = s + LU[i,j]*sol[j]
+    }
+    
+    sol[i] = b[i]-s
+  }
+  
+  sol[n] = sol[n]/LU[n,n]
+  
+  for(i in (n-1):1)
+  {
+    s = 0
+    
+    for (j in (i+1):n)
+    {
+      s = s + LU[i,j]*sol[j]
+    }
+    
+    sol[i] = (sol[i]-s)/LU[i,i]
+  }
+  
+  return(sol)
+}
+
+A = matrix(c(3.5,4.2,0.5,1/3), nrow=2, byrow=TRUE) 
+b = c(1.3, 7/4) 
+# Descomposición LU de A 
+LU = luA(A)
+
+print(LU)
+```
+
+Solucionamos:
+
+```{r,echo=FALSE}
+solvelu(LU,b)
+
+```
+
+#Factorización de una matriz
+
+El método de Jacobi, es un método iterativo simple pero lento que no permite llegar a la solucion de una matriz de la siguiente forma:
+
+Para el sistema: $A\textbf{x}=b$
+
+$A$ se reescribe como $A = D + L + U$
+
+Reemplazando
+
+$D + L + U\textbf{X} = b$
+
+$DX + LX + UX = b$
+
+por lo tanto:
+
+$X = D^{-1}B - D^{-1}LX - UX$
+
+$X = D^{-1}B - D^{-1}(L + U)X$ análogo a método de punto fijo $X = G(X)$
+
+
+Para nuestra matriz ejemplo y con una tolerancia de 5 iteraicones:
+
+```{r, echo=FALSE}
+#Funcion para sacar una matriz diagonal dada una matriz
+diag1 <- function(M) {
+  
+  M[col(M)!=row(M)] <- 0
+  
+  return(M)
+}
+
+A = matrix(c(-8.1, -7, 6.123, -2,
+             -1, 4,-3, -1,
+             0, -1, -5, 0.6,
+             -1, 0.33, 6, 1/2), nrow=4, byrow=TRUE)
+b = matrix(c(1.45,3,5.12,-4), nrow=4, byrow=TRUE)
+x0 = c(1,2,1,1)
+D = diag1(A)
+U = triu(A,k=1,diag = FALSE)
+L = tril(A,k=-1,diag = FALSE)
+
+
+jacobiPr <- function(A,b, x0, tol)
+{
+  x_k = matrix(x0)
+  
+  it = 0
+  repeat
+  {
+    inn = matrix(b-((L+U)%*%x_k))
+    D1 = (solve(D))
+    xk1 = D1%*%inn
+    cat("Error ",it," ",norm(xk1-x_k,"F")/norm(x_k),"\n")
+    x_k = xk1
+    it = it + 1
+    if(it == tol)
+      break
+  }
+  cat("Solución a 5 iteraciones: ",x_k,"\n")
+}
+
+A
+
+```
+
+obtenemos una solución:
+
+```{r, echo=FALSE}
+
+jacobiPr(A, b, x0, 5)
+
+```
+
+
+No obstante la solución que nos ofrece R con su función solve(...) es:
+
+```{r, echo=FALSE}
+
+solve(A, b)
+
+```
+
+Esto debido a la convergencia del método que fue de:
+
+```{r, echo=FALSE}
+
+I=diag(1,nrow = nrow(A)) #Identidad
+T3 = -solve(D) #Diagonal^-1
+T4 = T3%*%U #D * U
+T5= solve(D) 
+T6 = L%*%T5 #LD
+T7 = I + T6 #I + LD
+T8 = solve(T7)
+MatTG = T4%*%T8  #D * U * I + LD
+
+convergencia = norm(MatTG, type = c("I"))
+
+convergencia
+```
+
+
+Con un número de condición:
+
+```{r, echo=FALSE}
+print(1/rcond(A))
+#print(1/rcond(MatTG))
+```
+
+
+#Diagonalización
+
+La diagonalización de una matriz hace posible calcular cualquier función que este definida sobre el espectro de la matriz tales como: potencia de $A$ o el $e$
+
+Para la diagonalización se descompone la matriz de la siguiente forma:
+$A = PDP^{-1}$, donde $P$ son los vectores propios de $A$ y $D$ es su diagonal de los vectores propios.
+Por ejemplo, para encontrar la k-ésima potencia de $A$, basta con descomponerla de la siguiente manera: $A^k = PD^kP^{-1}$; Realizar esta descomposición disminuye el uso de recursos de procesamiento y almacenamiento, aumentando su eficiencia.
+
+Para la siguiente matriz $A$:
+```{r, echo=FALSE}
+
+a <- matrix(c(1,2,4, 2,1,-4, 0,0,3), 3, 3, byrow = TRUE)
+r <- eigen(a) 
+p <- r$vectors; 
+lam <- r$value
+d = diag(lam)
+
+a
+
+```
+
+sus vectores P
+
+```{r, echo=FALSE}
+p
+
+```
+
+su diagonal 
+
+```{r, echo=FALSE}
+d
+```
+
+Y finalmente $A^3$
+
+```{r, echo=FALSE}
+
+A = p %*% d^3 %*% solve(p)
+
+A
+```
+

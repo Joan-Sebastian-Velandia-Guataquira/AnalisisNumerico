@@ -1,0 +1,223 @@
+---
+title: "Taller 1"
+author: "Jimenez Nelson, Velandia Joan"
+date: "4 de agosto de 2019"
+output: pdf_document
+---
+ 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejercio 1
+
+
+## Error de truncamiento
+
+La precisión de la respuesta entre el último valor calculado y la respuesta esperada
+
+## Error de redondeo
+
+Imposibilidad de almacenar todas la cifras significativas, el error puede aumentar si los valores que se obtienen son usados de forma consecutiva en una secuencia de calculos.
+
+Ejemplo: Para el truncamiento de una maquina que solo almacena 4 cifras significativas, el error de redondeo al almacenar la cifra: 536.78 es:
+
+```{r calculo del error, echo=FALSE}
+valor_original = 536.78
+cont = 0
+for (i in 1:100)
+{
+  valor_original = valor_original / 10
+  temp = valor_original - 1
+  cont = cont + 1
+  
+  if (temp < 0)
+  {
+    break
+  }
+}
+#print (valor_original)
+#print (cont)
+trunc_number_n_decimals <- function(numberToTrunc, nDecimals)
+{
+  numberToTrunc <- numberToTrunc + (10^-(nDecimals+5))
+  splitNumber <- strsplit(x=format(numberToTrunc, digits=20, format=f), split="\\.")[[1]]
+  decimalPartTrunc <- substr(x=splitNumber[2], start=1, stop=nDecimals)
+  truncatedNumber <- as.numeric(paste0(splitNumber[1], ".", decimalPartTrunc))
+  return(truncatedNumber)
+}
+num_trunc = trunc_number_n_decimals(valor_original, 4)
+error = (valor_original - num_trunc)*10^cont
+valor_almacenado = num_trunc*10^cont
+cat("valor almacenado: ",valor_almacenado, "con un error = ",error)
+```
+
+# Ejercico 2
+
+## Precición, validez y convergencia
+
+```{r Algoritmo para hallar una raiz cuadrada, echo = FALSE}
+x = 3
+n = 7
+y = 0.5*(x + (n/x) )
+e = 0
+E = 10e-8
+
+iteracion =  0
+errores = c()
+eje_x  =  c()
+eje_y  =  c()
+
+cat( "\n", formatC ( c( "Iteracion     ", "    valor de Y      "), width = 2, format = "d", flag = " "  ), "\n")
+while(abs(x - y) > E)
+{
+  iteracion = iteracion + 1
+  errores[iteracion] = y
+  
+  x = y  
+  y = 0.5*(x + (n/x) )
+  cat( formatC( c(iteracion, y), digits = 15, width = -15, format = "f", flag = "  "  ), "\n" )
+  
+}
+
+iteraciones = c(1:iteracion)
+cont_n = 0;
+cont_e = 0;
+repeat
+{
+    eje_x[cont_n] = errores[cont_e]
+    eje_y[cont_n] = errores[cont_e+1]
+    cont_n = cont_n + 1
+    cont_e = cont_e + 1;
+    
+    if (cont_n == iteracion)
+    {
+      break;
+    }
+}
+  
+cat("Solucion real =", sqrt(n)  )
+cat("Solución dada por el algoritmo: ", y ," con un error relativo = ", formatC((abs(x - y)/x) *100, digits = 4, width = 0,format = 'f'), "%" )
+cat("y^2 = ", y*y)
+```
+
+```{r Grafica de convergencia, echo=FALSE}
+plot(eje_x, eje_y, main = "Convergencia raiz cuadrada", xlab= "y", ylab = "y+1", type = 'o' )
+
+```
+
+```{r Grafica de la variable Y vs la iteraciones realizadas por el algoritmo, echo = FALSE}
+plot(iteraciones, errores, main = "Y vs Iteraciones", xlab= "Iteraciones", ylab = "Valor de y", type = 'o' )
+```
+
+Para este ejercicio la precición dada es de 16 cifras significativas que podemos verificar en algun resultado de la variable Y, en la tabla Iteracion vs Valor de Y. La convergencia se podria evalua realizando una grafica entre el resultado x+1 vs x de los valores de Y. Finalmente la validez del algoritmo se resulve hallando el cuadrado de la solución dada por el mismo.
+
+
+# Ejercicio 3
+
+## Teorema de Taylor
+
+ELl polinomio $P_n(f,x_0)$ es una aproximación de la función $f$ en el intervalo $[a,b]$ con un error que podemos acortar fácilmente.
+
+
+
+$P_n(f,x_0) = f(x_0) + \sum_{k=1}^{n} f^{(k)} x_0/ k! * (x-x_0)^k$
+
+
+donde $f^(k)$ representa la derivada $k$-ésima de $f$
+
+En la solución se usó un $x_0$ = 0.
+
+
+```{r Aproximación de e^5 con 5 cifras significativas, echo= FALSE}
+num = 1+0.5+(0.5^2/2)+(0.5^3/6)+(0.5^4/24)+(0.5^5/120) 
+trunc_number_n_decimals <- function(numberToTrunc, nDecimals)
+{
+  numberToTrunc <- numberToTrunc + (10^-(nDecimals+5))
+  splitNumber <- strsplit(x=format(numberToTrunc, digits=20, format=f), split="\\.")[[1]]
+  decimalPartTrunc <- substr(x=splitNumber[2], start=1, stop=nDecimals)
+  truncatedNumber <- as.numeric(paste0(splitNumber[1], ".", decimalPartTrunc))
+  return(truncatedNumber)
+}
+num_trunc = trunc_number_n_decimals(num, 4)
+cat("El resutado es =", num_trunc)
+```
+
+# Ejercicio 4
+
+## Propagación del error de redondeo en las operaciónes aritméticas
+
+La magnitud del error de redondeo en la multiplicación puede ser tan grande como la suma de los errores de redondeo de los operandos ponderada por cada uno de sus respectivos valores.
+
+```{r Tamaño del error, echo =FALSE}
+velocidad = 4
+tiempo = 5
+eVelocidad = 0.1
+eTiempo = 0.1
+distancia = velocidad * tiempo
+eAbsDistancia = velocidad*eVelocidad + tiempo*eTiempo
+eRelDistancia = eVelocidad/velocidad + eTiempo/tiempo
+cat("\nEl Error absoluto es = ", eAbsDistancia) 
+cat("\nEl error relativo es = ", eRelDistancia*100, "%") 
+```
+
+# Ejercicio 5
+## Evaluar el valor de un polinomio
+
+Usando el método de Horner, se calcula con $n$ multiplicaciones el valor aproximado de un polinomio $P(x)$ dado un $x_0$.
+
+Sea $P_0(x) = a_0x^0= a_0$. El número de multiplicaciones para hallar $P_0(x_0)$ es igual a 0. Por lo
+que se cumple para el primer caso $k = 0$.
+
+Se asume por lo tanto que $P_k(x) = a_0 + a_1x + ... + a_kx^k$ y que $P_k(x_0) = a_0 + a_1x_0 + ... + a_k {x^k}_0$ tiene $k$ multiplicaciones y que el método de Horner se expresa de la siguiente manera:
+
+  $b_k = a_k$
+
+  $b_{k-1} = a_{k-1} + b_k * x_0$
+  
+  $...$
+
+  $b_0 = a_0 + b_1 * x_0$
+                                        
+Y se debe llegar a la forma $k + 1$ del polinomio:
+$P_k+1(x_0) = a_0 + a_1x_0 + .. + a_k+x^{k+1}_0$
+
+o reescrito de otra forma:
+$P_{k+1}(x_0) = a_0 + x(a_1 + x(a_2 + ... + x(a_k + xa_{k+1})))$
+
+Se reescribe $P_k(x_0)$ y se reemplaza $a_k$ por $b_k$ (Primera instrucción del método):
+$P_k(x_0) = a_0 + x_0(a_1 + ... + x_0(a_{k-1} + x_0 * b_k))$
+
+Se añade una iteración al método de Horner para $b_{k+1}$, añadiendo una multiplicación más al método 
+$(mult_{k+1} = k + 1)$
+                                    
+  $b_{k+1} = a_{k+1}$
+                                      
+  $b_k = a_k + b_{k+1} * x_0$
+                                  
+  $...$
+                                            
+  $b_0 = a_0 + b_1 * x_0$
+                                    
+Y se reemplaza $b_k$ en $P_k(x_0)$:
+$P_k(x_0) = a_0 + x_0(a_1 + ... + x_0(a_{k-1} + x_0 * (a_k + b_{k+1} * x_0))$
+
+Despejando la ecuación se llega a la forma:
+$P_k(x_0) = a_0 + x_0(a_1 + ... + x_0(a{k-1} + x_0 * (a_k + b_{k+1} * x_0))$
+
+La cual es equivalente a $P_{k+1}(x_0)$, quedando demostrado el número de múltiplicaciones iguales
+a $k$, el grado del polinomio
+
+```{r, echo=FALSE}
+vector = c(2,0,-3,3,-4) 
+x = -2
+d = vector[c(1)]
+for (i in 2:5)
+{
+  temp = d
+  dk = vector[c(i)] + temp*x
+  d = dk
+}
+cat("El polinomio: 2x^4-3x^2+3x-4 evaluado en -2 es  = ", d, "con ", (length(vector)-1), "multiplicaciones" )
+```
